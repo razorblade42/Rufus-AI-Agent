@@ -1,32 +1,67 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from bs4 import BeautifulSoup
-import requests
-from rufus.utils import filter_relevant_content, summarize_content
-import json
+import time
+from rufus.utils import filter_relevant_content_and_save
+
 
 class RufusAgent:
-    def __init__(self, base_url):
-        self.base_url = base_url
+    def __init__(self, max_depth=2, delay=1, selenium_driver_path=""):
+        """Initialize Rufus agent with base URL and other settings"""
+        self.max_depth = max_depth  # Maximum depth for nested page scraping
+        self.delay = delay  # Delay to avoid hitting websites too hard
+        self.visited_urls = set()  # Track visited URLs to avoid scraping the same page
+        self.selenium_driver_path = selenium_driver_path  # Path to the Selenium WebDriver
 
-    def scrape(self, url, instructions):
-        """Scrape the given URL and return structured, relevant data."""
-        full_url = f"{self.base_url}/{url}" if not url.startswith("http") else url
-        response = requests.get(full_url)
+    def scrape(self, url, instructions, depth=0):
 
-        if response.status_code != 200:
-            raise Exception(f"Failed to access {url}")
+        print("Scraping with parameters: ", url, instructions, depth)
+        """Main scraping function that handles links, nested pages, and dynamically-loaded content."""
+        if depth > self.max_depth:
+            return {}  # Stop further recursion when max depth is reached
 
-        soup = BeautifulSoup(response.content, 'html.parser')
+        full_url = url.startswith('http') and url or "https://" + url  # Handle relative URLs
 
-        # Selectively filter content based on user instructions
-        relevant_content = filter_relevant_content(soup, instructions)
+        # Avoid revisiting the same URLs
+        if full_url in self.visited_urls:
+            return {}
+        self.visited_urls.add(full_url)
 
-        # Summarize and synthesize content into a structured format
-        structured_content = summarize_content(relevant_content)
+        # Use Selenium to handle dynamic content loading
+        try:
+            # Initialize Selenium WebDriver
+            service = Service(
+                )  # Update path to chromedriver
+            driver = webdriver.Chrome(service=service)
+            driver.get(full_url)
+            time.sleep(self.delay)  # Wait for dynamic content to load
 
-        return structured_content
+            # Get the page source and parse it with BeautifulSoup
+            page_source = driver.page_source
+            soup = BeautifulSoup(page_source, 'html.parser')
 
-    def save_to_json(self, structured_content, filename="scraped_data.json"):
-        """Save the structured content to a new JSON file."""
-        with open(filename, 'w', encoding='utf-8') as json_file:
-            json.dump(structured_content, json_file, ensure_ascii=False, indent=4)
-        print(f"Data successfully saved to {filename}")
+            # Close the WebDriver after loading the page
+            driver.quit()
+
+            # Filter content based on user instructions
+            filter_relevant_content_and_save(soup, instructions)
+
+            # Recursively scrape nested pages by following links
+            self.scrape_nested_links(soup, instructions, depth + 1)
+
+        except Exception as e:
+            print(f"Failed to scrape {full_url}: {e}")
+
+    def scrape_nested_links(self, soup, instructions, depth):
+        """Scrape nested links from the current page."""
+        nested_content = []
+
+        for link in soup.find_all('a', href=True):
+            next_url = link['href']
+
+            # Only follow relative links or same-domain absolute links
+            if next_url.startswith('/') or next_url.startswith(self.base_url):
+                nested_page_content = self.scrape(next_url, instructions, depth)
+                if nested_page_content:
+                    nested_content.append(nested_page_content)
+

@@ -1,27 +1,44 @@
-from transformers import pipeline
 import re
+import json
 
 
-def filter_relevant_content(soup, instructions):
-    """Filter and retrieve content from the soup based on the user's instructions."""
-    instructions_keywords = instructions.split()  # Extract keywords from the instructions
-    relevant_content = []
+def filter_relevant_content_and_save(soup, instructions):
+    """Filter and retrieve content from the soup based on the user's instructions, and return the content as
+    structured JSON."""
+    instructions_keywords = instructions.lower().split()  # Extract keywords from the instructions
+    relevant_content = []  # Store relevant sections of content
 
-    # Check relevant tags for content
+    # Check relevant tags for content (e.g., headings, paragraphs, links)
     for tag in soup.find_all(['h1', 'h2', 'h3', 'p', 'a']):
         tag_text = tag.get_text(strip=True)
 
-        # Match content based on the keywords in instructions
+        # Match content based on keywords in instructions
         for keyword in instructions_keywords:
             if re.search(rf"\b{keyword.lower()}\b", tag_text.lower()):
-                relevant_content.append(tag_text)
+                relevant_content.append({
+                    "tag": tag.name,
+                    "content": tag_text,
+                    "url": tag.get('href') if tag.name == 'a' else None, # Include URL if it's a link
+                #     also add the keyword that matched
+                    "matched_keyword": keyword
+                })
                 break  # Stop checking after a match to avoid duplications
 
-    return " ".join(relevant_content)
+    # Prepare the content in a JSON-compatible format
+    json_output = {
+        "instructions": instructions,
+        "results": relevant_content
+    }
+
+    # return json_output
+#     instead of returning the json_output, we will save it to a json file
+    save_to_json(json_output, "output.json")
 
 
-def summarize_content(content):
-    """Summarize the filtered content into a concise, structured format."""
-    summarizer = pipeline("summarization")
-    summarized = summarizer(content, max_length=150, min_length=50, do_sample=False)
-    return summarized[0]['summary_text']
+def save_to_json(data, filename):
+    """Save the extracted data to a JSON file."""
+    with open(filename, 'w') as json_file:
+        json.dump(data, json_file, indent=4)
+    print(f"Data has been saved to {filename}")
+
+
