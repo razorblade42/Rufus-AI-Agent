@@ -35,7 +35,10 @@ from rufus.agent import RufusAgent
 if __name__ == "__main__":
     # Path to the ChromeDriver executable
     SELENIUM_DRIVER_PATH = 'C:/Users/araj0/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe';
-    # Initialize the Rufus Agent
+    # Initialize the Rufus Agent with max_depth , delay and driver path where 
+    # max_depth is the maximum depth of the webpages to be scraped
+    # delay is the time to wait for the page to load
+    # driver path is the path to the chrome driver
     rufus = RufusAgent(2,1,SELENIUM_DRIVER_PATH)
 
     # Provide more detailed custom user instructions
