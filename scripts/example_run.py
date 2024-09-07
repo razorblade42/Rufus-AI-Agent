@@ -26,5 +26,3 @@ if __name__ == "__main__":
     # Print the structured output
     print("Scraped and Structured Content: \n", result)
 
-    # Save the result to a JSON file
-    # rufus.save_to_json(result, filename="output.json")
