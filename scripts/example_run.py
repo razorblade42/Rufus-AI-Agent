@@ -2,11 +2,18 @@ from rufus.agent import RufusAgent
 
 if __name__ == "__main__":
     # Path to the ChromeDriver executable
-    SELENIUM_DRIVER_PATH = 'C:/Users/araj0/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe';
+    SELENIUM_DRIVER_PATH = 'C:/Users/araj0/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe'
+    # Base URL for the website to scrape
     BASE_URL = "https://www.amazon.in"
+    # Maximum number of URLs to visit
     MAX_URLS_VISITED = 10
+    # Maximum depth for nested page scraping
+    MAX_DEPTH = 2
+    # Delay to avoid hitting websites too hard
+    DELAY = 1
+
     # Initialize the Rufus Agent
-    rufus = RufusAgent(2, 1, SELENIUM_DRIVER_PATH, BASE_URL, MAX_URLS_VISITED)
+    rufus = RufusAgent(MAX_DEPTH, DELAY, SELENIUM_DRIVER_PATH, BASE_URL, MAX_URLS_VISITED)
 
     # Provide more detailed custom user instructions
     instructions = """
