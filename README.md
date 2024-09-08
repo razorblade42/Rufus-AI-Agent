@@ -35,11 +35,10 @@ from rufus.agent import RufusAgent
 if __name__ == "__main__":
     # Path to the ChromeDriver executable
     SELENIUM_DRIVER_PATH = 'C:/Users/araj0/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe';
-    # Initialize the Rufus Agent with max_depth , delay and driver path where 
-    # max_depth is the maximum depth of the webpages to be scraped
-    # delay is the time to wait for the page to load
-    # driver path is the path to the chrome driver
-    rufus = RufusAgent(2,1,SELENIUM_DRIVER_PATH)
+    BASE_URL = "https://www.amazon.in"
+    MAX_URLS_VISITED = 10
+    # Initialize the Rufus Agent
+    rufus = RufusAgent(2, 1, SELENIUM_DRIVER_PATH, BASE_URL, MAX_URLS_VISITED)
 
     # Provide more detailed custom user instructions
     instructions = """
@@ -54,10 +53,9 @@ if __name__ == "__main__":
     """
 
     # Scrape the site using the agent
-    result = rufus.scrape(url="https://www.amazon.in/s?k=amazon+shoes&adgrpid=64475670368&ext_vrnc=hi&hvadid=590593835457&hvdev=c&hvlocphy=9299565&hvnetw=g&hvqmt=e&hvrand=3246560036712660643&hvtargid=kwd-694970439&hydadcr=22282_2255478&tag=googinhydr1-21&ref=pd_sl_7zivw3v566_e", instructions=instructions)
-
-    # Print the structured output
-    print("Scraped and Structured Content: \n", result)
-   
-    #now head over to scripts/output.json to see the structured output
+    result = rufus.scrape(
+        path="/s?k=amazon+shoes&adgrpid=64475670368&ext_vrnc=hi&hvadid=590593835457&hvdev=c&hvlocphy=9299565&hvnetw=g"
+             "&hvqmt=e&hvrand=3246560036712660643&hvtargid=kwd-694970439&hydadcr=22282_2255478&tag=googinhydr1-21&ref"
+             "=pd_sl_7zivw3v566_e",
+        instructions=instructions)
 
